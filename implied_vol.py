@@ -49,7 +49,7 @@ class BachelierModel(PricingModel):
         
         F = S * math.exp(r * T)
 
-        d_denominator = math.sqrt(sigma ** 2 * (math.exp(2 * r * T) - 1) / (2 * r))
+        d_denominator = math.sqrt(sigma ** 2 * (math.exp(2 * r * T) - 1) / (2 * r)) if r != 0 else sigma * math.sqrt(T)
 
         d = (F - K) / d_denominator
 
@@ -78,11 +78,11 @@ class ImpliedVol:
 
     def calculate_implied_vol(self, ) -> float:
 
-        # invalid inputs
-        if self.T <= 0 or self.S <= 0 or self.K <= 0 or self.market_price < 0:
+        # check if the input is valid
+        if not self.input_validation():
             return float('nan')
 
-        sigma = 0.2 if self.model_type == 'BlackScholes' else 20 # initial guess of sigma
+        sigma = 0.2 if self.model_type == 'BlackScholes' else 0.2 * self.S # initial guess of sigma
 
         # Newton's method
         for _ in range(self.max_interation):
@@ -103,7 +103,34 @@ class ImpliedVol:
                 sigma = sigma / 2
             else:
                 sigma = sigma_updated
-        return float('nan') # fail to converge
+
+        # If Newton fails, try Bisection method
+        sigma_min = 1e-6      # Minimum volatility (near zero)
+        sigma_max_bs = 5.0    # Maximum volatility for Black-Scholes
+        sigma_max_bach = 5.0 * self.S  # Maximum volatility for Bachelier
+        sigma_low = sigma_min
+        sigma_high = sigma_max_bs if self.model_type == 'BlackScholes' else sigma_max_bach
+
+        for iteration in range(self.max_interation):
+            sigma_mid = (sigma_low + sigma_high) / 2.0
+            
+            price_mid = self.model.calculate_price(self.S, self.K, self.T, self.r, sigma_mid, self.option_type)
+            diff_mid = price_mid - self.market_price
+            
+            # Check convergence
+            if abs(diff_mid) < self.tolerance:
+                return sigma_mid
+            
+            # Check if interval is too small
+            if abs(sigma_high - sigma_low) < self.tolerance:
+                return sigma_mid
+            
+            # Update bounds
+            if diff_mid < 0:  # Price too low, need higher volatility
+                sigma_low = sigma_mid
+            else:  # Price too high, need lower volatility
+                sigma_high = sigma_mid
+        return float('nan')
 
 
     def calculate_vega(self, sigma) -> float:
@@ -113,3 +140,22 @@ class ImpliedVol:
         
         vega = (price_up - price_down) / (2 * h)
         return vega
+    
+    def input_validation(self,) -> bool:
+        # invalid inputs
+        if self.T <= 0 or self.S <= 0 or self.K <= 0 or self.market_price < 0:
+            return False
+        
+        # invalid option price violates the bounds
+        if self.model_type == 'BlackScholes':
+            if self.option_type == 'Call' and (self.market_price > self.S or self.market_price < self.S - self.K * math.exp(-self.r * self.T)):
+                return False
+            elif self.option_type == 'Put' and (self.market_price > self.K * math.exp(-self.r * self.T) or self.market_price < self.K * math.exp(-self.r * self.T) - self.S):
+                return False
+        else:
+            if self.option_type == 'Call' and self.market_price < self.S - self.K * math.exp(-self.r * self.T):
+                return False
+            elif self.option_type == 'Put' and self.market_price < self.K * math.exp(-self.r * self.T) - self.S:
+                return False
+        
+        return True
