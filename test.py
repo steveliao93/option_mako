@@ -1,0 +1,37 @@
+import implied_vol
+import math
+
+def test_pricing_models():
+    S = 100.0    # Spot price
+    K = 105.0    # Strike price
+    T = 0.25     # Time to maturity
+    r = 0.05     # Risk-free rate
+    sigma_bs = 0.2    # Vol for BS
+    sigma_bach = 20   # Vol for Bachelier
+    
+    # Black-Scholes model
+    bs_model = implied_vol.BSModel()
+    bs_call = bs_model.calculate_price(S, K, T, r, sigma_bs, 'Call')
+    bs_put = bs_model.calculate_price(S, K, T, r, sigma_bs, 'Put')    
+    print(f"BS Call Price: {bs_call:.6f}")
+    print(f"BSPut Price:  {bs_put:.6f}")
+    
+    # Verify put-call parity
+    parity_check = bs_call - bs_put - (S - K * math.exp(-r * T))
+    print(f"BS Put-Call Parity Check: {parity_check:.10f}")
+
+    # Bachelier model
+    bach_model = implied_vol.BachelierModel()
+    bach_call = bach_model.calculate_price(S, K, T, r, sigma_bach, 'Call')
+    bach_put = bach_model.calculate_price(S, K, T, r, sigma_bach, 'Put')
+                                                    
+    print(f"Bachelier Call Price: {bach_call:.6f}")
+    print(f"Bachelier Put Price:  {bach_put:.6f}")
+
+    # Verify put-call parity
+    parity_check = bach_call - bach_put - (S - K * math.exp(-r * T))
+    print(f"Bachelier Put-Call Parity Check: {parity_check:.10f}")
+
+
+if __name__ == "__main__":
+    test_pricing_models()
