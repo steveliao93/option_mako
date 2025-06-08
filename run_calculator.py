@@ -12,7 +12,11 @@ class RunCalculator:
 
         df['Implied Volatility'] = df.apply(self.calculate_row_iv, axis = 1)
 
-        df.to_csv('output.csv', index=False, float_format='%.10g')
+        df['Spot'] = df['Underlying']
+
+        columns_tosave = ['ID', 'Spot', 'Strike', 'Risk-Free Rate', 'Years To Expiry', 'Option Type', 'Model Type', 'Implied Volatility', 'Market Price']
+
+        df.to_csv('output.csv', columns = columns_tosave, index=False, float_format='%.10g')
 
     def calculate_row_iv(self, row: pd.Series) -> float:
         """
