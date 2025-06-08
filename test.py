@@ -32,6 +32,47 @@ def test_pricing_models():
     parity_check = bach_call - bach_put - (S - K * math.exp(-r * T))
     print(f"Bachelier Put-Call Parity Check: {parity_check:.10f}")
 
+def test_implied_vol():
+    
+    
+    # BS
+    S, K, T, r = 100.0, 100.0, 1.0, 0.05
+    market_price = 10.45  # Market price of call option
+
+    calculator_bs = implied_vol.ImpliedVol(S, K, T, r, market_price, 'Put', 'BlackScholes')
+
+    implied_vol_bs = calculator_bs.calculate_implied_vol()
+    
+    print(f"\nBlack-Scholes Example:")
+    print(f"Market Price: {market_price}")
+    print(f"Implied Volatility: {implied_vol_bs:.6f}")
+    
+    # Verify by recalculating price
+    if not math.isnan(implied_vol_bs):
+        bs_model = implied_vol.BSModel()
+        recalc_price = bs_model.calculate_price(S, K, T, r, implied_vol_bs, 'Put')
+        print(f"Recalculated Price: {recalc_price:.6f}")
+        print(f"Price Difference: {abs(recalc_price - market_price):.8f}")
+    
+    # Bachelier
+    F, K, T, r = 100.0, 100.0, 1.0, 0.05
+    market_price = 15.96
+
+    calculator_bach = implied_vol.ImpliedVol(S, K, T, r, market_price, 'Put', 'Bachelier')
+    
+    implied_vol_bach = calculator_bach.calculate_implied_vol()
+    
+    print(f"\nBachelier Example:")
+    print(f"Market Price: {market_price}")
+    print(f"Implied Volatility: {implied_vol_bach:.6f}")
+
+    if not math.isnan(implied_vol_bs):
+        bach_model = implied_vol.BachelierModel()
+        recalc_price = bach_model.calculate_price(S, K, T, r, implied_vol_bach, 'Put')
+        print(f"Recalculated Price: {recalc_price:.6f}")
+        print(f"Price Difference: {abs(recalc_price - market_price):.8f}")
+
 
 if __name__ == "__main__":
     test_pricing_models()
+    test_implied_vol()
