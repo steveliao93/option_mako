@@ -9,6 +9,7 @@ class TestBlackScholesModel(unittest.TestCase):
         self.model = BSModel()
     
     def test_call_option_price(self):
+        """Test for the call option price lower/upper bounds"""
         S, K, T, r, sigma = 100, 100, 1, 0.05, 0.2
         
         price = self.model.calculate_price(S, K, T, r, sigma, 'Call')
@@ -18,6 +19,7 @@ class TestBlackScholesModel(unittest.TestCase):
         self.assertLess(price, S)  
     
     def test_put_option_price(self):
+        """Test for the put option price lower/upper bounds"""
         S, K, T, r, sigma = 100, 100, 1, 0.05, 0.2
         
         price = self.model.calculate_price(S, K, T, r, sigma, 'Put')
@@ -27,6 +29,7 @@ class TestBlackScholesModel(unittest.TestCase):
         self.assertLess(price, K * math.exp(-r * T))  # Put price should be less than strike
     
     def test_put_call_parity(self):
+        """Test for the put call parity"""
         S, K, T, r, sigma = 100, 100, 1, 0.05, 0.2
         
         call_price = self.model.calculate_price(S, K, T, r, sigma, 'Call')
@@ -39,6 +42,7 @@ class TestBlackScholesModel(unittest.TestCase):
         self.assertAlmostEqual(actual_diff, expected_diff, places=6)
     
     def test_zero_volatility(self):
+        """Test for zero volatility input"""
         S, K, T, r, sigma = 100, 90, 1, 0.05, 0
         
         call_price = self.model.calculate_price(S, K, T, r, sigma, 'Call')
@@ -55,6 +59,7 @@ class TestBachelierModel(unittest.TestCase):
         self.model = BachelierModel()
     
     def test_call_option_price(self):
+        """Test for the call option price lower bounds"""
         S, K, T, r, sigma = 100, 100, 1, 0.05, 20
         
         price = self.model.calculate_price(S, K, T, r, sigma, 'Call')
@@ -63,6 +68,7 @@ class TestBachelierModel(unittest.TestCase):
         self.assertGreater(price, max(S - K * math.exp(-r * T),0))
     
     def test_put_option_price(self):
+        """Test for the put option price lower bounds"""
         S, K, T, r, sigma = 100, 100, 1, 0.05, 20
         
         price = self.model.calculate_price(S, K, T, r, sigma, 'Put')
@@ -71,6 +77,7 @@ class TestBachelierModel(unittest.TestCase):
         self.assertGreater(price, max(K * math.exp(-r * T) - S,0))
     
     def test_forward_symmetry(self):
+        """Test for the forward symmetry"""
         S, K, T, r, sigma = 100, 110, 1, 0, 20
         
         call_price = self.model.calculate_price(S, K, T, r, sigma, 'Call')
@@ -87,6 +94,7 @@ class TestImpliedVolatilityCalculator(unittest.TestCase):
         self.calculator = None
     
     def test_black_scholes_implied_vol(self):
+        """Test for the BS implied vol"""
         S, K, T, r, true_sigma = 100, 100, 1, 0.05, 0.2
         
         # Calculate theoretical price
@@ -101,6 +109,7 @@ class TestImpliedVolatilityCalculator(unittest.TestCase):
         self.assertAlmostEqual(implied_vol, true_sigma, places=6)
     
     def test_bachelier_implied_vol(self):
+        """Test for the Bachelier implied vol"""
         S, K, T, r, true_sigma = 100, 100, 1, 0.05, 20
         
         # Calculate theoretical price

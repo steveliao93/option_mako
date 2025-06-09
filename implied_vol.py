@@ -77,6 +77,11 @@ class ImpliedVol:
         self.option_type = option_type
 
     def calculate_implied_vol(self, ) -> float:
+        """
+        Calculate implied volatility
+
+        The main algorithm is Newton's method, and the fallback is Bisection method
+        """
 
         # check if the input is valid
         if not self.input_validation():
@@ -104,7 +109,7 @@ class ImpliedVol:
             else:
                 sigma = sigma_updated
 
-        # If Newton fails, try Bisection method
+        # If Newton fails to converge, try Bisection method
         sigma_min = 1e-6      # Minimum volatility (near zero)
         sigma_max_bs = 5.0    # Maximum volatility for Black-Scholes
         sigma_max_bach = 5.0 * self.S  # Maximum volatility for Bachelier
@@ -134,6 +139,9 @@ class ImpliedVol:
 
 
     def calculate_vega(self, sigma) -> float:
+        """
+        Calculate the first derivative w.r.t. the volatility
+        """
         h = 1e-4 
         price_up = self.model.calculate_price(self.S, self.K, self.T, self.r, sigma + h, self.option_type)
         price_down = self.model.calculate_price(self.S, self.K, self.T, self.r, sigma - h, self.option_type)
@@ -142,6 +150,9 @@ class ImpliedVol:
         return vega
     
     def input_validation(self,) -> bool:
+        """
+        Validate the input, including the lower/upper bounds check for market price
+        """
         # invalid inputs
         if self.T <= 0 or self.S <= 0 or self.K <= 0 or self.market_price < 0:
             return False
